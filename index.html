@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Skin Cancer Detection</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #eef2ff;
+      text-align: center;
+    }
+    .box {
+      background: white;
+      width: 420px;
+      margin: auto;
+      margin-top: 40px;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px gray;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .bar {
+      width: 100%;
+      background: #ddd;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+    .fill {
+      height: 20px;
+      border-radius: 10px;
+    }
+    #cancerBar { background: red; }
+    #nonCancerBar { background: green; }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Skin Cancer Detection (Demo)</h2>
+
+  <p id="status">Loading model…</p>
+
+  <input type="file" id="imageInput"><br><br>
+  <img id="preview" width="200"><br><br>
+
+  <button onclick="predict()">Predict</button>
+
+  <p>Cancerous mole:</p>
+  <div class="bar"><div id="cancerBar" class="fill" style="width:0%"></div></div>
+  <p id="cancerText">0%</p>
+
+  <p>Non-cancerous mole:</p>
+  <div class="bar"><div id="nonCancerBar" class="fill" style="width:0%"></div></div>
+  <p id="nonCancerText">0%</p>
+
+  <button onclick="alert('This is a demo. Please consult a dermatologist.')">
+    Contact a doctor
+  </button>
+</div>
+
+<script>
+  const modelURL = "https://teachablemachine.withgoogle.com/models/RW9rfcZwl/model.json";
+const metadataURL = "https://teachablemachine.withgoogle.com/models/RW9rfcZwl/metadata.json";
+
+  let model;
+  let imageReady = false;
+
+  async function loadModel() {
+    model = await tmImage.load(modelURL, metadataURL);
+
+    document.getElementById("status").innerText = "Model loaded ✓";
+  }
+
+  loadModel();
+
+  document.getElementById("imageInput").addEventListener("change", function(e) {
+    const img = document.getElementById("preview");
+    img.src = URL.createObjectURL(e.target.files[0]);
+    img.onload = () => imageReady = true;
+  });
+
+  async function predict() {
+    if (!model) {
+      alert("Model not loaded yet");
+      return;
+    }
+    if (!imageReady) {
+      alert("Please upload an image first");
+      return;
+    }
+
+    const img = document.getElementById("preview");
+    const prediction = await model.predict(img);
+
+    console.log(prediction);
+
+    // adjust order if needed
+    const cancer = Math.round(prediction[0].probability * 100);
+    const nonCancer = Math.round(prediction[1].probability * 100);
+
+    document.getElementById("cancerBar").style.width = cancer + "%";
+    document.getElementById("nonCancerBar").style.width = nonCancer + "%";
+    document.getElementById("cancerText").innerText = cancer + "%";
+    document.getElementById("nonCancerText").innerText = nonCancer + "%";
+  }
+</script>
+
+</body>
+</html>
